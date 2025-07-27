@@ -1,0 +1,5 @@
+Django==4.2.0
+djangorestframework==3.14.0
+psycopg2-binary==2.9.9 # For PostgreSQL connectivity
+pandas==2.0.3 # For Excel data ingestion
+openpyxl==3.1.2 # For pandas to read .xlsx files

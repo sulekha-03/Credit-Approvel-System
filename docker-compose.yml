@@ -1,0 +1,45 @@
+
+version: '3.8'
+services:
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: credit_approval_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    command: python /app/backend/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app/backend
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+      DB_NAME: credit_approval_db
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      - db
+    # NEW ENTRYPOINT BELOW THIS LINE
+    entrypoint: |
+      /bin/sh -c "
+      echo 'Waiting for PostgreSQL...'
+      until pg_isready -h db -p 5432 -U user; do
+        echo 'PostgreSQL is unavailable - sleeping'
+        sleep 2
+      done
+      echo 'PostgreSQL is up - executing command'
+      python /app/backend/manage.py migrate --noinput && \
+      python /app/backend/manage.py runserver 0.0.0.0:8000
+      "
+volumes:
+  postgres_data:
